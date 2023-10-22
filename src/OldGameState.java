@@ -1,46 +1,49 @@
 import java.util.Arrays;
 import java.util.BitSet;
 
-public class GameState {
+public class OldGameState {
     private static final byte RADIUS = 2; //Must be > 1 and < 7
     private static final byte AREA = 3*RADIUS*(RADIUS+1)+1;
     private static final byte[] S = new byte[]{1, 3*RADIUS+2, 3*RADIUS+1, AREA-1, AREA-3*RADIUS-2, AREA-3*RADIUS-1};
+    private static final byte[] ROW_SIZES = getRowSizes();
+    private static final byte[] START_INDICES = getStartIndices();
     private static final BitSet[] CAPTURE_MASKS = getCaptureMasks();
     private static final byte[][][] CAPTURE_TRIPLETS = getCaptureTriplets();
 
     private final BitSet PLAYER_BITSET, OPPONENT_BITSET;
     private final byte ILLEGAL_POSITION;
 
-    public GameState(){
+    public OldGameState(){
         this(new BitSet(AREA),
              new BitSet(AREA),
                 (byte) -1);
     }
 
-    public GameState(BitSet playerBitSet, BitSet opponentBitSet, byte illegalPosition) {
+    public OldGameState(BitSet playerBitSet, BitSet opponentBitSet, byte illegalPosition) {
         PLAYER_BITSET = playerBitSet;
         OPPONENT_BITSET = opponentBitSet;
         ILLEGAL_POSITION = illegalPosition;
     }
 
-    public GameState[] getPossibleStates() {
+    public OldGameState[] getPossibleStates() {
         BitSet possibleMoves = getPossibleMoves();
-        GameState[] possibleGameStates = new GameState[13*possibleMoves.cardinality()];
+        OldGameState[] possibleGameStates = new OldGameState[13*possibleMoves.cardinality()];
         int index = 0;
         for (int i = possibleMoves.nextSetBit(0); i >= 0; i = possibleMoves.nextSetBit(i+1)) {
             BitSet newPlayerBitSet = (BitSet)PLAYER_BITSET.clone();
             newPlayerBitSet.set(i);
-            possibleGameStates[index++] = new GameState(OPPONENT_BITSET, newPlayerBitSet, (byte) -1);
+            possibleGameStates[index++] = new OldGameState(OPPONENT_BITSET, newPlayerBitSet, (byte) -1);
+            possibleGameStates[index-1].print();
 
             for (int j = 0; j < CAPTURE_TRIPLETS[i].length; j++) {
-                if(OPPONENT_BITSET.get(CAPTURE_TRIPLETS[i][j][0])&&OPPONENT_BITSET.get(CAPTURE_TRIPLETS[i][j][1])&&PLAYER_BITSET.get(CAPTURE_TRIPLETS[i][j][2])){
+                if(OPPONENT_BITSET.get(CAPTURE_TRIPLETS[i][j][0]) && OPPONENT_BITSET.get(CAPTURE_TRIPLETS[i][j][1]) && PLAYER_BITSET.get(CAPTURE_TRIPLETS[i][j][2])){
                     BitSet firstNewOpponentBitSet = (BitSet)OPPONENT_BITSET.clone();
-                    firstNewOpponentBitSet.set(CAPTURE_TRIPLETS[i][j][0]);
-                    possibleGameStates[index++] = new GameState(firstNewOpponentBitSet, newPlayerBitSet, CAPTURE_TRIPLETS[i][j][0]);
+                    firstNewOpponentBitSet.clear(CAPTURE_TRIPLETS[i][j][0]);
+                    possibleGameStates[index++] = new OldGameState(firstNewOpponentBitSet, newPlayerBitSet, CAPTURE_TRIPLETS[i][j][0]);
 
                     BitSet secondNewOpponentBitSet = (BitSet)OPPONENT_BITSET.clone();
-                    secondNewOpponentBitSet.set(CAPTURE_TRIPLETS[i][j][1]);
-                    possibleGameStates[index++] = new GameState(secondNewOpponentBitSet, newPlayerBitSet, CAPTURE_TRIPLETS[i][j][1]);
+                    secondNewOpponentBitSet.clear(CAPTURE_TRIPLETS[i][j][1]);
+                    possibleGameStates[index++] = new OldGameState(secondNewOpponentBitSet, newPlayerBitSet, CAPTURE_TRIPLETS[i][j][1]);
                     System.out.println("removed balls!");
                 }
             }
@@ -59,10 +62,6 @@ public class GameState {
         }
 
         return possibleMoves;
-    }
-
-    public void print() {
-        System.out.println("P: " + PLAYER_BITSET + " O: " + OPPONENT_BITSET);
     }
 
     private static BitSet[] getCaptureMasks() {
@@ -100,21 +99,46 @@ public class GameState {
         return captureSpokes;
     }
 
+    public void print() {
+        System.out.print("Printing GameState: ");
+        for (int i = 0; i < 2*RADIUS+1; i++) {
+            for (int j = 0; j < ROW_SIZES[i]; j++) {
+                if(PLAYER_BITSET.get((START_INDICES[i]+S[0]*j)%AREA)) {
+                    System.out.print("X ");
+                } else if (OPPONENT_BITSET.get((START_INDICES[i]+S[0]*j)%AREA)) {
+                    System.out.print("O ");
+                } else {
+                    System.out.print(". ");
+                }
+            }
+            System.out.println();
+        }
+    }
+
     // UTILS
 
-//    private static int[] getRowSizes(int hexSize) {
-//        int[] rowSizes = new int[2*hexSize-1];
-//        for (int i = 0; i < hexSize; i++) {
-//            rowSizes[i] = rowSizes[rowSizes.length-1-i] = hexSize + i;
-//        }
-//        return rowSizes;
-//    }
-//
-//    private static int[] getStartIndices(int[] rowSizes) {
-//        int[] startIndices = new int[rowSizes.length];
-//        for (int i = 1; i < rowSizes.length; i++) {
-//            startIndices[i] = startIndices[i-1] + rowSizes[i-1];
-//        }
-//        return startIndices;
-//    }
+    private static byte[] getRowSizes() {
+        byte[] rowSizes = new byte[2*RADIUS+1];
+
+        for (int i = 0; i < RADIUS + 1; i++) {
+            rowSizes[i] = rowSizes[rowSizes.length-i-1] = (byte) (RADIUS+i+1);
+        }
+
+        return rowSizes;
+    }
+
+    private static byte[] getStartIndices() {
+        byte[] startIndices = new byte[ROW_SIZES.length];
+
+        startIndices[0] = (byte) ((S[2]*RADIUS)%AREA);
+        for (int i = 1; i < RADIUS+1; i++) {
+            startIndices[i] = (byte) ((startIndices[i-1] + S[4])%AREA);
+        }
+
+        for (int i = RADIUS+1; i < startIndices.length; i++) {
+            startIndices[i] = (byte) ((startIndices[i-1] + S[5])%AREA);
+        }
+
+        return startIndices;
+    }
 }
