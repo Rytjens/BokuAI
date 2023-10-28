@@ -15,9 +15,7 @@ public class Human extends Player{
 
         int[] captureIndices = Board.getCaptureIndices(index, captures);
 
-        int captureIndex = -1;
-
-        captureIndex = promptIndex();
+        int captureIndex = promptIndex();
 
         while (!contains(captureIndices, captureIndex)) {
             System.out.println("Not a valid capture, try again.");
@@ -34,9 +32,21 @@ public class Human extends Player{
 
         do {
             System.out.print("File: ");
-            file = Integer.parseInt(scanner.nextLine());
+            while (!scanner.hasNextInt()){
+                System.out.println("Not a valid number. Try again.");
+                scanner.nextLine();
+                System.out.print("File: ");
+            }
+            file = scanner.nextInt();
+
             System.out.print("Rank: ");
-            rank = Integer.parseInt(scanner.nextLine());
+            while (!scanner.hasNextInt()){
+                System.out.println("Not a valid number. Try again.");
+                scanner.nextLine();
+                System.out.print("Rank: ");
+            }
+            rank = scanner.nextInt();
+
             System.out.println();
         } while (Board.fileRankToIndex(file, rank) < 0);
 

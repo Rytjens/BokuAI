@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="BokuAI:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/BokuAI_jar</output-path>
+    <root id="archive" name="BokuAI.jar">
+      <element id="module-output" name="BokuAI" />
+    </root>
+  </artifact>
+</component>

@@ -126,10 +126,10 @@ public class Board {
 
     public Board(boolean whiteToMove){
         this(new Stones(), new Stones(), new Stack<>(), whiteToMove, whiteToMove? Z_WTM:0);
-//        for (long l : Z_WHITE) System.out.println(Long.toBinaryString(HashAgent.getZobristKey(l)));
-//        for (long l : Z_BLACK) System.out.println(Long.toBinaryString(HashAgent.getZobristKey(l)));
-//        for (long l : Z_CAPTURE) System.out.println(Long.toBinaryString(HashAgent.getZobristKey(l)));
-//        System.out.println(Long.toBinaryString(HashAgent.getZobristKey(Z_WTM)));
+//        for (long l : Z_WHITE) System.out.println(Long.toBinaryString(Agent.getZobristKey(l)));
+//        for (long l : Z_BLACK) System.out.println(Long.toBinaryString(Agent.getZobristKey(l)));
+//        for (long l : Z_CAPTURE) System.out.println(Long.toBinaryString(Agent.getZobristKey(l)));
+//        System.out.println(Long.toBinaryString(Agent.getZobristKey(Z_WTM)));
     }
 
     public Board(){
@@ -310,7 +310,8 @@ public class Board {
         }
         return (stones.columns[2*RADIUS] & (stones.columns[2*RADIUS] >> 1) & (stones.columns[2*RADIUS] >> 2) & (stones.columns[2*RADIUS] >> 3) & (stones.columns[2*RADIUS] >> 4)) != 0;
     }
-    private static boolean isInCheck(Stones player, Stones opponent){
+    private static int countChecks(Stones player, Stones opponent){
+        int numberOfChecks = 0;
 
         int flippedPlayerBits;
         int opponentBits;
@@ -318,20 +319,23 @@ public class Board {
         for (int i = 0; i < 2*RADIUS; i++) {
             flippedPlayerBits = getRange(~player.getFiles()[i], Board.START_INDICES[i], Board.END_INDICES[i]);
             opponentBits = getRange(opponent.files[i], Board.START_INDICES[i], Board.END_INDICES[i]);
-            if(isInCheck(flippedPlayerBits, opponentBits)) return true;
+            if(isInCheck(flippedPlayerBits, opponentBits)) numberOfChecks++;
 
             flippedPlayerBits = getRange(~player.getRanks()[i], Board.START_INDICES[i], Board.END_INDICES[i]);
             opponentBits = getRange(opponent.ranks[i], Board.START_INDICES[i], Board.END_INDICES[i]);
-            if(isInCheck(flippedPlayerBits, opponentBits)) return true;
+            if(isInCheck(flippedPlayerBits, opponentBits)) numberOfChecks++;
 
             flippedPlayerBits = getRange(~player.getColumns()[i], Board.COL_START_INDICES[i], Board.COL_END_INDICES[i]);
             opponentBits = getRange(opponent.columns[i], Board.COL_START_INDICES[i], Board.COL_END_INDICES[i]);
-            if(isInCheck(flippedPlayerBits, opponentBits)) return true;
+            if(isInCheck(flippedPlayerBits, opponentBits)) numberOfChecks++;
         }
 
         flippedPlayerBits = getRange(~player.getColumns()[2*RADIUS], Board.COL_START_INDICES[2*RADIUS], Board.COL_END_INDICES[2*RADIUS]);
         opponentBits = getRange(opponent.columns[2*RADIUS], Board.COL_START_INDICES[2*RADIUS], Board.COL_END_INDICES[2*RADIUS]);
-        return isInCheck(flippedPlayerBits, opponentBits);
+
+        if(isInCheck(flippedPlayerBits, opponentBits)) numberOfChecks++;
+
+        return numberOfChecks;
     }
     private static boolean isInCheck(int flippedPlayerBits, int opponentBits){
         return ((flippedPlayerBits) & (opponentBits << 1) & (opponentBits << 2) & (opponentBits << 3) & (opponentBits << 4)) != 0
@@ -339,6 +343,45 @@ public class Board {
                 || ((opponentBits) & (opponentBits << 1) & (flippedPlayerBits << 2) & (opponentBits << 3) & (opponentBits << 4)) != 0
                 || ((opponentBits) & (opponentBits << 1) & (opponentBits << 2) & (flippedPlayerBits << 3) & (opponentBits << 4)) != 0
                 || ((opponentBits) & (opponentBits << 1) & (opponentBits << 2) & (opponentBits << 3) & (flippedPlayerBits << 4)) != 0;
+    }
+    private static int countPreChecks(Stones player, Stones opponent){
+        int numberOfPreChecks = 0;
+
+        int flippedPlayerBits;
+        int opponentBits;
+
+        for (int i = 0; i < 2*RADIUS; i++) {
+            flippedPlayerBits = getRange(~player.getFiles()[i], Board.START_INDICES[i], Board.END_INDICES[i]);
+            opponentBits = getRange(opponent.files[i], Board.START_INDICES[i], Board.END_INDICES[i]);
+            if(isInPreCheck(flippedPlayerBits, opponentBits)) numberOfPreChecks++;
+
+            flippedPlayerBits = getRange(~player.getRanks()[i], Board.START_INDICES[i], Board.END_INDICES[i]);
+            opponentBits = getRange(opponent.ranks[i], Board.START_INDICES[i], Board.END_INDICES[i]);
+            if(isInPreCheck(flippedPlayerBits, opponentBits)) numberOfPreChecks++;
+
+            flippedPlayerBits = getRange(~player.getColumns()[i], Board.COL_START_INDICES[i], Board.COL_END_INDICES[i]);
+            opponentBits = getRange(opponent.columns[i], Board.COL_START_INDICES[i], Board.COL_END_INDICES[i]);
+            if(isInPreCheck(flippedPlayerBits, opponentBits)) numberOfPreChecks++;
+        }
+
+        flippedPlayerBits = getRange(~player.getColumns()[2*RADIUS], Board.COL_START_INDICES[2*RADIUS], Board.COL_END_INDICES[2*RADIUS]);
+        opponentBits = getRange(opponent.columns[2*RADIUS], Board.COL_START_INDICES[2*RADIUS], Board.COL_END_INDICES[2*RADIUS]);
+
+        if(isInPreCheck(flippedPlayerBits, opponentBits)) numberOfPreChecks++;
+
+        return numberOfPreChecks;
+    }
+    private static boolean isInPreCheck(int flippedPlayerBits, int opponentBits){
+        return ((flippedPlayerBits) & (flippedPlayerBits << 1) & (opponentBits << 2) & (opponentBits << 3) & (opponentBits << 4)) != 0
+                || ((flippedPlayerBits) & (opponentBits << 1) & (flippedPlayerBits << 2) & (opponentBits << 3) & (opponentBits << 4)) != 0
+                || ((flippedPlayerBits) & (opponentBits << 1) & (opponentBits << 2) & (flippedPlayerBits << 3) & (opponentBits << 4)) != 0
+                || ((flippedPlayerBits) & (opponentBits << 1) & (opponentBits << 2) & (opponentBits << 3) & (flippedPlayerBits << 4)) != 0
+                || ((opponentBits) & (flippedPlayerBits << 1) & (flippedPlayerBits << 2) & (opponentBits << 3) & (flippedPlayerBits << 4)) != 0
+                || ((opponentBits) & (flippedPlayerBits << 1) & (opponentBits << 2) & (flippedPlayerBits << 3) & (opponentBits << 4)) != 0
+                || ((opponentBits) & (flippedPlayerBits << 1) & (opponentBits << 2) & (opponentBits << 3) & (flippedPlayerBits << 4)) != 0
+                || ((opponentBits) & (opponentBits << 1) & (flippedPlayerBits << 2) & (flippedPlayerBits << 3) & (opponentBits << 4)) != 0
+                || ((opponentBits) & (opponentBits << 1) & (flippedPlayerBits << 2) & (opponentBits << 3) & (flippedPlayerBits << 4)) != 0
+                || ((opponentBits) & (opponentBits << 1) & (opponentBits << 2) & (flippedPlayerBits << 3) & (flippedPlayerBits << 4)) != 0;
     }
     public boolean checkWhiteWin(){
         return checkWin(WHITE);
@@ -349,11 +392,17 @@ public class Board {
     public boolean checkOpponentWin(){
         return checkWin(whiteToMove ? BLACK : WHITE);
     }
-    public boolean isPlayerInCheck(){
-        return isInCheck(whiteToMove? WHITE:BLACK, whiteToMove? BLACK:WHITE);
+    public int countPlayerInChecks(){
+        return countChecks(whiteToMove? WHITE:BLACK, whiteToMove? BLACK:WHITE);
     }
-    public boolean isOpponentInCheck(){
-        return isInCheck(whiteToMove? BLACK:WHITE, whiteToMove? WHITE:BLACK);
+    public int countOpponentInChecks(){
+        return countChecks(whiteToMove? BLACK:WHITE, whiteToMove? WHITE:BLACK);
+    }
+    public int countPlayerInPreChecks(){
+        return countPreChecks(whiteToMove? WHITE:BLACK, whiteToMove? BLACK:WHITE);
+    }
+    public int countOpponentInPreChecks(){
+        return countPreChecks(whiteToMove? BLACK:WHITE, whiteToMove? WHITE:BLACK);
     }
 
     public long calculateZobristHash(){
@@ -404,6 +453,10 @@ public class Board {
     }
     public boolean isWhiteToMove() {
         return whiteToMove;
+    }
+
+    public Stack<Move> getMoveHistory() {
+        return MOVE_HISTORY;
     }
 
     public long getZobristHash(){

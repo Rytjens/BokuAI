@@ -1,30 +1,31 @@
+import java.util.Objects;
+import java.util.Scanner;
+
 public class Boku {
     private final Board BOARD;
     private final Player WHITE, BLACK;
-    private final int RANDOM_START = 2;
 
     public Boku() {
         this.BOARD = new Board();
-        this.WHITE = new AlphaBetaAgent(5);
-        this.BLACK = new HashAgent(10);
+
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Player moves first? (y?): ");
+        if(Objects.equals(scanner.nextLine(), "y")){
+            this.WHITE = new Human();
+            this.BLACK = new Agent(20);
+        } else {
+            this.WHITE = new Agent(20);
+//            this.BLACK = new Agent(5);
+            this.BLACK = new Human();
+        }
     }
 
     public void startGame(){
         boolean whiteToMove = true;
         int round = 0;
+
         System.out.println("[ Round 0 | Start of the game ]");
-        BOARD.print();
-
-        Player random = new RandomAgent();
-
-        for (int i = 0; i < RANDOM_START; i++) {
-            round++;
-            Move move = random.getMove(BOARD);
-            BOARD.makeMove(move);
-
-            whiteToMove = !whiteToMove;
-        }
-
         BOARD.print();
 
         while (!BOARD.isTerminal()) {
@@ -38,7 +39,6 @@ public class Boku {
             System.out.println();
             System.out.println("[ Round " + round + " ]");
             BOARD.print();
-//            BOARD.printArray();
             System.out.println();
 
             whiteToMove = !whiteToMove;
@@ -50,6 +50,14 @@ public class Boku {
             System.out.println("Black won");
         } else {
             System.out.println("Draw");
+        }
+
+        System.out.println();
+        System.out.println("[  Moves:  ]");
+
+        for (Move move: BOARD.getMoveHistory()){
+            move.print();
+            System.out.println();
         }
     }
 }
