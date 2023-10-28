@@ -20,14 +20,19 @@ public class Move {
     public int getCapture(){
         return CAPTURE;
     }
+
+    public boolean equals(Move move){
+        return (this.INDEX == move.INDEX && this.CAPTURE == move.CAPTURE);
+    }
+
     public void print(){
         System.out.print("File: " + Board.INDEX_TO_FILE[INDEX] + " Rank: " + Board.INDEX_TO_RANK[INDEX]);
 //        System.out.print("Index: " + INDEX);
         if(isCapture()){
-            System.out.println(" | Capture - File: " + Board.INDEX_TO_RANK[CAPTURE] + " Rank: " + Board.INDEX_TO_RANK[CAPTURE]);
+            System.out.print(" | Capture - File: " + Board.INDEX_TO_FILE[CAPTURE] + " Rank: " + Board.INDEX_TO_RANK[CAPTURE]);
 //            System.out.println(" | Capture - " + CAPTURE);
         } else {
-            System.out.println(" | No capture.");
+            System.out.print(" | No capture.");
         }
     }
 }

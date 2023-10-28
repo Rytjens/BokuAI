@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="496d5b82-ef3c-4481-97c2-64cf35397b84" name="Changes" comment="-byte +ints&#10;move application&#10;index to file/rank/col">
-      <change afterPath="$PROJECT_DIR$/src/Agent.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Human.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Player.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/RandomAgent.java" afterDir="false" />
+    <list default="true" id="496d5b82-ef3c-4481-97c2-64cf35397b84" name="Changes" comment="agent and human&#10;basic ab">
+      <change afterPath="$PROJECT_DIR$/src/AlphaBetaAgent.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Agent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/HashAgent.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Board.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Board.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Boku.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Boku.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
@@ -86,7 +84,14 @@
       <option name="project" value="LOCAL" />
       <updated>1697970114338</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="agent and human&#10;basic ab">
+      <created>1698285262328</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1698285262328</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -103,6 +108,17 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="bytes" />
     <MESSAGE value="-byte +ints&#10;move application&#10;index to file/rank/col" />
-    <option name="LAST_COMMIT_MESSAGE" value="-byte +ints&#10;move application&#10;index to file/rank/col" />
+    <MESSAGE value="agent and human&#10;basic ab" />
+    <option name="LAST_COMMIT_MESSAGE" value="agent and human&#10;basic ab" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <breakpoint enabled="true" type="java-exception">
+          <properties class="java.lang.NullPointerException" package="java.lang" />
+          <option name="timeStamp" value="6" />
+        </breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

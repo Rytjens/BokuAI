@@ -1,99 +1,94 @@
 import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Random;
+import java.util.Hashtable;
+import java.util.List;
 
-public class Agent extends Player{
+public class AlphaBetaAgent extends Player{
     public static final int[] DOUBLES = generateDoubles();
     private static final int[] TRIPLES = generateTriples();
     private static final int[] QUADRUPLES = generateQuadruples();
 
-    private final Random R = new Random();
-    private final long[] Z_WHITE = new long[Board.AREA];
-    private final long[] Z_BLACK = new long[Board.AREA];
-    private final long Z_WTM;
-
     private final int DEPTH;
-    private int nodes;
-    public Agent(int depth){
-        this.DEPTH = depth;
 
-        R.setSeed(0);
-        for (int i = 0; i < Z_WHITE.length; i++) {
-            Z_WHITE[i] = R.nextLong();
-            Z_BLACK[i] = R.nextLong();
-        }
-        Z_WTM = R.nextLong();
+    public AlphaBetaAgent(int depth){
+        this.DEPTH = depth;
     }
 
+    private int nodeCount, pruneCount;
+    private Move rootBestMove;
     public Move getMove(Board board){
-        nodes = 0;
+        nodeCount = pruneCount = 0;
         double start = System.nanoTime();
 
         Board boardCopy = board.copy();
 
-        Move bestMove = null;
-        int bestScore = Integer.MIN_VALUE;
-
-        for (Move move: boardCopy.getMoves()){
-            boardCopy.makeMove(move);
-            int score = -alphaBeta(boardCopy, DEPTH, -1_000_000_000,1_000_000_000); //Initial AlphaBeta
-            if (score > bestScore) {
-                bestScore = score;
-                bestMove = move;
-            }
-            boardCopy.unmakeMove();
-        }
+        rootBestMove = null;
+        int bestValue = alphaBeta(boardCopy, 0, DEPTH, -Integer.MAX_VALUE,Integer.MAX_VALUE); //Initial AlphaBeta
 
         double end = System.nanoTime();
 
-        System.out.println("Number of nodes visited: " + nodes);
-        System.out.println("Time per node: " + ((end - start)/(1_000_000*nodes)) + "ms");
-        System.out.println("Best score: " + bestScore);
+        System.out.println("Number of nodes visited: " + nodeCount);
+        System.out.println("Number of nodes pruned: " + pruneCount);
+//        System.out.println("Total number of nodes visited: " + (totalNodes+=nodes));
+        System.out.println("Time: " + ((end - start)/(1_000_000.0)) + "ms");
+        System.out.println(" Best score: " + bestValue);
 
-        return bestMove;
+        return rootBestMove;
     }
 
-    private int alphaBeta(Board board, int depth, int alpha, int beta){
-        if(board.isTerminal() || depth == 0){
-            nodes++;
+    private int alphaBeta(Board board, int plyFromRoot, int depth, int alpha, int beta){
+        nodeCount++;
+
+        if(depth == 0){
             return evaluate(board);
         }
 
-        int score = -1_000_000_000;
+        int bestValue = -Integer.MAX_VALUE;
 
-        for (Move move: board.getMoves()) {
+        List<Move> moveList = board.getMoves();
+
+        if(moveList.isEmpty()){
+            return evaluate(board);
+        }
+
+//        System.out.println("[  Depth: " + depth + " " + (board.isWhiteToMove()?"White":"Black") + " to move.  ]");
+        for (Move move : moveList) {
+
             board.makeMove(move);
-            int value = -alphaBeta(board, depth - 1, -beta, -alpha);
+            int value = -alphaBeta(board, plyFromRoot + 1, depth - 1, -beta, -alpha);
             board.unmakeMove();
 
-            if(value > score) score = value;
-            if(score > alpha) alpha = score;
-            if(alpha >= beta) break;
+            if (value > bestValue) {
+                bestValue = value;
+                if(plyFromRoot == 0){
+                    rootBestMove = move;
+                }
+            }
+            if (bestValue > alpha) alpha = bestValue;
+            if (alpha >= beta) {
+                pruneCount++;
+                break;
+            }
         }
 
-        return score;
+//        System.out.println("Best value: " + bestValue);
+        return bestValue;
     }
 
-    private int evaluate(Board board){
-        int evaluation = 0;
-
-        if(board.checkPlayerWin()){ //Check if player to move has won.
-            evaluation += 1_000_000_000;
-        }
+    private int evaluate(Board board){ // Give the board evaluation for the player to move, positive is better.
+        int evaluation = 5;
 
         if(board.checkOpponentWin()){ //Check if opponent has won.
             evaluation -= 1_000_000_000;
         }
 
-
         evaluation += countStones(board.getPlayerStones());
         evaluation -= countStones(board.getOpponentStones());
 
-        evaluation += 2*countDoubles(board.getPlayerStones());
-        evaluation -= 2*countDoubles(board.getOpponentStones());
+        evaluation += countDoubles(board.getPlayerStones());
+        evaluation -= countDoubles(board.getOpponentStones());
 
-        evaluation += 5*countTriples(board.getPlayerStones());
-        evaluation -= 5*countTriples(board.getOpponentStones());
+        evaluation += countTriples(board.getPlayerStones());
+        evaluation -= countTriples(board.getOpponentStones());
 
         evaluation += 20*countQuadruples(board.getPlayerStones());
         evaluation -= 20*countQuadruples(board.getOpponentStones());
@@ -142,18 +137,6 @@ public class Agent extends Player{
         count += QUADRUPLES[stones.getColumns()[2*Board.RADIUS]];
 
         return count;
-    }
-
-    private long getZobristHash(BitSet whiteStones, BitSet blackStones, boolean whiteToMove){
-        long zobristKey = 0;
-
-        for (int i = 0; i < Board.AREA; i++) {
-            if(whiteStones.get(i)) zobristKey ^= Z_WHITE[i];
-            else if(blackStones.get(i)) zobristKey ^= Z_BLACK[i];
-        }
-        if(whiteToMove) zobristKey ^= Z_WTM;
-
-        return zobristKey;
     }
 
 
